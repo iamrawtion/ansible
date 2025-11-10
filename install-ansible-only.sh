@@ -17,30 +17,56 @@ echo "Ansible Installation - Pip Only"
 echo "========================================="
 echo ""
 
-# Check Python
-echo -n "Checking Python3... "
-if ! command -v python3 &> /dev/null; then
+# Check Python (try python3 first, then python)
+echo -n "Checking Python... "
+PYTHON_CMD=""
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+    echo -e "${GREEN}✓ Found: $(python3 --version)${NC}"
+elif command -v python &> /dev/null; then
+    # Check if it's Python 3
+    PYTHON_VERSION=$(python --version 2>&1)
+    if echo "$PYTHON_VERSION" | grep -q "Python 3"; then
+        PYTHON_CMD="python"
+        echo -e "${GREEN}✓ Found: $PYTHON_VERSION${NC}"
+    else
+        echo -e "${RED}✗ Found Python 2 (Python 3 required)${NC}"
+        echo ""
+        echo "ERROR: Python 3 is required but only Python 2 was found."
+        echo "Please install Python 3."
+        exit 1
+    fi
+else
     echo -e "${RED}✗ Not found${NC}"
     echo ""
-    echo "ERROR: Python3 is required but not installed."
-    echo "Please install Python3 or run the full installation script."
+    echo "ERROR: Python is not installed in this container."
+    echo ""
+    echo "The jenkins/jenkins image may not include Python by default."
+    echo "You need to either:"
+    echo "  1. Use a Jenkins image that includes Python"
+    echo "  2. Install Python in your Jenkins container"
+    echo "  3. Use a custom Dockerfile"
+    echo ""
+    echo "See JENKINS_SETUP.md for Docker images with Python pre-installed."
     exit 1
 fi
-echo -e "${GREEN}✓ Found: $(python3 --version)${NC}"
 
 # Check pip
 echo -n "Checking pip... "
 if command -v pip3 &> /dev/null; then
     echo -e "${GREEN}✓ Found${NC}"
     PIP_CMD="pip3"
-elif python3 -m pip --version &> /dev/null 2>&1; then
-    echo -e "${GREEN}✓ Found (python3 -m pip)${NC}"
-    PIP_CMD="python3 -m pip"
+elif command -v pip &> /dev/null; then
+    echo -e "${GREEN}✓ Found${NC}"
+    PIP_CMD="pip"
+elif $PYTHON_CMD -m pip --version &> /dev/null 2>&1; then
+    echo -e "${GREEN}✓ Found ($PYTHON_CMD -m pip)${NC}"
+    PIP_CMD="$PYTHON_CMD -m pip"
 else
     echo -e "${RED}✗ Not found${NC}"
     echo ""
-    echo "ERROR: pip is required but not installed."
-    echo "Try: python3 -m ensurepip --user"
+    echo "ERROR: pip is not installed."
+    echo "Try: $PYTHON_CMD -m ensurepip --user"
     exit 1
 fi
 

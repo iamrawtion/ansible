@@ -122,31 +122,43 @@ Then in Jenkins, the training scripts will detect Ansible is already installed.
 
 ### Dockerfile for Jenkins with Ansible Support
 
+**IMPORTANT:** The standard `jenkins/jenkins:lts` image does **NOT** include Python!
+
+You need to create a custom Dockerfile:
+
 ```dockerfile
 FROM jenkins/jenkins:lts
 
 USER root
 
-# Install system dependencies
+# Install Python and dependencies
 RUN apt-get update && \
     apt-get install -y \
     python3 \
     python3-pip \
+    python3-venv \
     sudo \
     git \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Configure sudo for jenkins user
+# Configure sudo for jenkins user (optional)
 RUN echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Install Ansible
+# Install Ansible system-wide
 RUN pip3 install ansible
 
 USER jenkins
 
 # Add pip binaries to PATH
-ENV PATH="/home/jenkins/.local/bin:${PATH}"
+ENV PATH="/var/jenkins_home/.local/bin:${PATH}"
+```
+
+Build and use:
+
+```bash
+docker build -t jenkins-with-python .
+docker run -p 8080:8080 jenkins-with-python
 ```
 
 Build and run:
