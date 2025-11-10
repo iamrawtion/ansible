@@ -1,0 +1,62 @@
+---
+# Lesson 5: Using Handlers
+# Handlers are tasks that run only when notified by other tasks
+
+- name: Handlers and Service Management
+  hosts: local
+  gather_facts: no
+
+  vars:
+    config_dir: /tmp/ansible-handlers-demo
+
+  tasks:
+    - name: Create application directory
+      file:
+        path: "{{ config_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create application configuration
+      copy:
+        content: |
+          # Application Configuration
+          server.port=8080
+          server.host=0.0.0.0
+          log.level=INFO
+        dest: "{{ config_dir }}/app.properties"
+        mode: '0644'
+      notify:
+        - Log configuration change
+        - Create backup
+
+    - name: Update configuration (will trigger handlers)
+      lineinfile:
+        path: "{{ config_dir }}/app.properties"
+        regexp: '^log.level='
+        line: 'log.level=DEBUG'
+      notify:
+        - Log configuration change
+        - Create backup
+
+    - name: Create a control file
+      copy:
+        content: "Handler demo completed\n"
+        dest: "{{ config_dir }}/status.txt"
+        mode: '0644'
+
+  handlers:
+    - name: Log configuration change
+      copy:
+        content: "Configuration was changed at {{ ansible_date_time.iso8601 }}\n"
+        dest: "{{ config_dir }}/change.log"
+        mode: '0644'
+
+    - name: Create backup
+      copy:
+        src: "{{ config_dir }}/app.properties"
+        dest: "{{ config_dir }}/app.properties.backup"
+        mode: '0644'
+
+    - name: Restart service (simulation)
+      debug:
+        msg: "Service would be restarted here in production"

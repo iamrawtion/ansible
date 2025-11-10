@@ -1,0 +1,41 @@
+---
+# Lesson 1: Basic Ansible Playbook
+# This playbook demonstrates fundamental Ansible concepts
+
+- name: Basic Ansible Operations
+  hosts: local
+  gather_facts: yes
+
+  tasks:
+    - name: Display a welcome message
+      debug:
+        msg: "Welcome to Ansible Training! Running on {{ ansible_hostname }}"
+
+    - name: Show the operating system
+      debug:
+        msg: "OS Family: {{ ansible_os_family }}, Distribution: {{ ansible_distribution }}"
+
+    - name: Display current date and time
+      debug:
+        msg: "Current time is {{ ansible_date_time.iso8601 }}"
+
+    - name: Create a test directory
+      file:
+        path: /tmp/ansible-training
+        state: directory
+        mode: '0755'
+
+    - name: Create a simple text file
+      copy:
+        content: "This file was created by Ansible on {{ ansible_date_time.date }}\n"
+        dest: /tmp/ansible-training/hello.txt
+        mode: '0644'
+
+    - name: Verify the file exists
+      stat:
+        path: /tmp/ansible-training/hello.txt
+      register: file_info
+
+    - name: Display file information
+      debug:
+        msg: "File exists: {{ file_info.stat.exists }}, Size: {{ file_info.stat.size }} bytes"

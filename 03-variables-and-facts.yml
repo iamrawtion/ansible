@@ -1,0 +1,80 @@
+---
+# Lesson 3: Working with Variables and Facts
+# Understanding different types of variables in Ansible
+
+- name: Variables and Facts Demo
+  hosts: local
+  gather_facts: yes
+
+  vars:
+    # Simple variables
+    app_name: "MyWebApp"
+    app_version: "1.0.0"
+    app_port: 8080
+
+    # List variable
+    team_members:
+      - Alice
+      - Bob
+      - Charlie
+      - Diana
+
+    # Dictionary variable
+    database_config:
+      host: localhost
+      port: 5432
+      name: training_db
+      user: ansible_user
+
+  tasks:
+    - name: Display simple variables
+      debug:
+        msg: "Application: {{ app_name }} v{{ app_version }} on port {{ app_port }}"
+
+    - name: Show team members
+      debug:
+        msg: "Team member: {{ item }}"
+      loop: "{{ team_members }}"
+
+    - name: Display database configuration
+      debug:
+        msg: "Database {{ database_config.name }} on {{ database_config.host }}:{{ database_config.port }}"
+
+    - name: Show system facts
+      debug:
+        msg: |
+          Hostname: {{ ansible_hostname }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Architecture: {{ ansible_architecture }}
+          CPU Cores: {{ ansible_processor_vcpus }}
+          Memory: {{ ansible_memtotal_mb }} MB
+
+    - name: Set fact dynamically
+      set_fact:
+        deployment_time: "{{ ansible_date_time.iso8601 }}"
+        deployment_user: "{{ ansible_user_id }}"
+
+    - name: Use the dynamic fact
+      debug:
+        msg: "Deployed by {{ deployment_user }} at {{ deployment_time }}"
+
+    - name: Create a file using variables
+      copy:
+        content: |
+          Application: {{ app_name }}
+          Version: {{ app_version }}
+          Port: {{ app_port }}
+          Deployed: {{ deployment_time }}
+          Database: {{ database_config.host }}:{{ database_config.port }}/{{ database_config.name }}
+        dest: /tmp/app-info.txt
+        mode: '0644'
+
+    - name: Conditional task based on variable
+      debug:
+        msg: "Running in development mode"
+      when: app_port == 8080
+
+    - name: Another conditional example
+      debug:
+        msg: "This is a production deployment"
+      when: app_version is version('1.0.0', '>=')

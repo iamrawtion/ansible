@@ -1,0 +1,72 @@
+---
+# Lesson 2: File and Directory Operations
+# Learn how to manage files and directories with Ansible
+
+- name: File and Directory Management
+  hosts: local
+  gather_facts: no
+
+  vars:
+    working_dir: /tmp/ansible-files-demo
+
+  tasks:
+    - name: Create main working directory
+      file:
+        path: "{{ working_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create multiple subdirectories
+      file:
+        path: "{{ working_dir }}/{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - logs
+        - config
+        - data
+        - backups
+
+    - name: Create configuration files with different content
+      copy:
+        content: |
+          # Configuration file for {{ item.name }}
+          environment={{ item.env }}
+          debug={{ item.debug }}
+        dest: "{{ working_dir }}/config/{{ item.name }}.conf"
+        mode: '0644'
+      loop:
+        - { name: 'app1', env: 'production', debug: 'false' }
+        - { name: 'app2', env: 'development', debug: 'true' }
+        - { name: 'app3', env: 'testing', debug: 'true' }
+
+    - name: Create a log file with timestamps
+      lineinfile:
+        path: "{{ working_dir }}/logs/application.log"
+        line: "{{ ansible_date_time.iso8601 }} - Application started"
+        create: yes
+        mode: '0644'
+
+    - name: Ensure specific line exists in a file
+      lineinfile:
+        path: "{{ working_dir }}/config/settings.conf"
+        line: "max_connections=100"
+        create: yes
+
+    - name: List all created files
+      find:
+        paths: "{{ working_dir }}"
+        recurse: yes
+        file_type: file
+      register: found_files
+
+    - name: Display file count
+      debug:
+        msg: "Total files created: {{ found_files.files | length }}"
+
+    - name: Show all file paths
+      debug:
+        msg: "{{ item.path }}"
+      loop: "{{ found_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
