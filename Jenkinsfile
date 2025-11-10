@@ -11,15 +11,27 @@ pipeline {
             steps {
                 echo 'Checking and installing prerequisites...'
                 sh '''
-                    chmod +x install-prerequisites.sh verify-setup.sh
+                    chmod +x *.sh
 
                     # Check if Ansible is installed
                     if ! command -v ansible &> /dev/null; then
-                        echo "Ansible not found, installing prerequisites..."
-                        ./install-prerequisites.sh --yes
+                        echo "Ansible not found, installing..."
+
+                        # Check if Python is available
+                        if command -v python3 &> /dev/null && command -v pip3 &> /dev/null; then
+                            echo "Python and pip found, using pip-only installation..."
+                            ./install-ansible-only.sh
+                        else
+                            echo "Using full installation script..."
+                            ./install-prerequisites.sh --yes
+                        fi
                     else
                         echo "Ansible is already installed: $(ansible --version | head -n 1)"
                     fi
+
+                    # Ensure Ansible is in PATH
+                    export PATH="$HOME/.local/bin:$PATH"
+                    ansible --version
                 '''
             }
         }

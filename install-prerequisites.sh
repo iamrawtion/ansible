@@ -404,6 +404,25 @@ main() {
         echo ""
     fi
 
+    # Quick check: if Python and Ansible are already available, skip system installation
+    if command -v python3 &> /dev/null && command -v pip3 &> /dev/null; then
+        echo -e "${GREEN}Python3 and pip are already installed!${NC}"
+        echo "Python: $(python3 --version)"
+        echo "pip: $(pip3 --version 2>&1 | head -n1 || echo 'available')"
+        echo ""
+
+        # If we don't have sudo/root, skip system packages entirely
+        if [ -z "$SUDO" ] && [ "$EUID" -ne 0 ]; then
+            echo -e "${YELLOW}No system privileges detected.${NC}"
+            echo -e "${YELLOW}Skipping system package installation (not needed).${NC}"
+            echo ""
+            install_ansible
+            verify_installation
+            return
+        fi
+    fi
+
+    # Standard installation flow with system packages
     update_package_manager
     install_python
     install_pip
