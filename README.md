@@ -44,6 +44,13 @@ chmod +x install-prerequisites.sh
 ./install-prerequisites.sh
 ```
 
+For non-interactive/automated installation (Jenkins, CI/CD):
+```bash
+./install-prerequisites.sh --yes
+# or
+./install-prerequisites.sh -y
+```
+
 This will automatically detect your OS and install:
 - Python 3
 - pip

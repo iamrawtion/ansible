@@ -77,7 +77,13 @@ if [ $NEED_INSTALL -eq 1 ]; then
         echo -e "${BLUE}Step 2: Installing Prerequisites${NC}"
         echo -e "${BLUE}=========================================${NC}"
         echo ""
-        ./install-prerequisites.sh
+
+        # Call install script with --yes flag if non-interactive
+        if is_interactive; then
+            ./install-prerequisites.sh
+        else
+            ./install-prerequisites.sh --yes
+        fi
 
         if [ $? -ne 0 ]; then
             echo -e "${RED}Installation failed. Exiting.${NC}"

@@ -16,7 +16,7 @@ pipeline {
                     # Check if Ansible is installed
                     if ! command -v ansible &> /dev/null; then
                         echo "Ansible not found, installing prerequisites..."
-                        ./install-prerequisites.sh
+                        ./install-prerequisites.sh --yes
                     else
                         echo "Ansible is already installed: $(ansible --version | head -n 1)"
                     fi
@@ -31,7 +31,7 @@ pipeline {
                     # Run verification (non-interactive)
                     echo "n" | ./verify-setup.sh || {
                         echo "Verification failed, attempting to fix..."
-                        ./install-prerequisites.sh
+                        ./install-prerequisites.sh --yes
                         echo "n" | ./verify-setup.sh
                     }
                 '''

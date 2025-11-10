@@ -2,6 +2,7 @@
 
 # Ansible Training - Prerequisites Installation Script
 # This script automatically installs Ansible and required dependencies
+# Usage: ./install-prerequisites.sh [-y|--yes|--non-interactive]
 
 set -e  # Exit on error
 
@@ -12,10 +13,21 @@ RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Check for non-interactive mode
+NON_INTERACTIVE=0
+if [[ "$1" == "-y" ]] || [[ "$1" == "--yes" ]] || [[ "$1" == "--non-interactive" ]] || [[ "$ANSIBLE_TRAINING_NONINTERACTIVE" == "1" ]] || [[ ! -t 0 ]]; then
+    NON_INTERACTIVE=1
+fi
+
 echo "========================================="
 echo "Ansible Training - Prerequisites Setup"
 echo "========================================="
 echo ""
+
+if [ $NON_INTERACTIVE -eq 1 ]; then
+    echo -e "${YELLOW}Running in non-interactive mode${NC}"
+    echo ""
+fi
 
 # Detect OS
 detect_os() {
@@ -214,12 +226,17 @@ install_ansible() {
         echo -e "${GREEN}✓ Already installed${NC}"
         echo "  $CURRENT_VERSION"
 
-        read -p "Do you want to upgrade Ansible? (y/N): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        if [ $NON_INTERACTIVE -eq 0 ]; then
+            read -p "Do you want to upgrade Ansible? (y/N): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                return 0
+            fi
+            echo "Upgrading Ansible..."
+        else
+            echo "Skipping upgrade in non-interactive mode"
             return 0
         fi
-        echo "Upgrading Ansible..."
     else
         echo -e "${YELLOW}Not found, installing...${NC}"
     fi
@@ -346,12 +363,17 @@ main() {
     detect_os
     check_root
 
-    echo ""
-    read -p "Do you want to proceed with installation? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled."
-        exit 0
+    if [ $NON_INTERACTIVE -eq 0 ]; then
+        echo ""
+        read -p "Do you want to proceed with installation? (y/N): " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Installation cancelled."
+            exit 0
+        fi
+    else
+        echo "Proceeding with installation automatically..."
+        echo ""
     fi
 
     update_package_manager

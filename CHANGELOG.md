@@ -2,6 +2,27 @@
 
 All notable changes to this Ansible training project will be documented in this file.
 
+## [1.2.0] - 2025-11-10
+
+### Added
+- Non-interactive mode for installation scripts
+  - Added `--yes`, `-y`, `--non-interactive` flags to `install-prerequisites.sh`
+  - Auto-detection of non-interactive environments (no TTY)
+  - Support for `ANSIBLE_TRAINING_NONINTERACTIVE=1` environment variable
+  - Perfect for Jenkins, CI/CD pipelines, and Docker builds
+- New comprehensive INSTALL.md documentation
+
+### Changed
+- Updated Jenkinsfile to use `./install-prerequisites.sh --yes`
+- Updated setup-and-run.sh to pass --yes flag in non-interactive mode
+- Enhanced README.md with non-interactive usage examples
+- Scripts no longer hang waiting for user input in automated environments
+
+### Fixed
+- Jenkins pipeline now proceeds automatically without user prompts
+- Installation scripts work correctly in Docker containers
+- Better error handling for CI/CD environments
+
 ## [1.1.0] - 2025-11-10
 
 ### Fixed
