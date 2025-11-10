@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  ansible-training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ansible-training
+    hostname: ansible-training-host
+    volumes:
+      - .:/ansible-training
+    stdin_open: true
+    tty: true
+    working_dir: /ansible-training

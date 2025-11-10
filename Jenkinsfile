@@ -3,15 +3,37 @@ pipeline {
 
     environment {
         ANSIBLE_FORCE_COLOR = 'true'
+        PATH = "$HOME/.local/bin:$PATH"
     }
 
     stages {
-        stage('Setup Verification') {
+        stage('Install Prerequisites') {
+            steps {
+                echo 'Checking and installing prerequisites...'
+                sh '''
+                    chmod +x install-prerequisites.sh verify-setup.sh
+
+                    # Check if Ansible is installed
+                    if ! command -v ansible &> /dev/null; then
+                        echo "Ansible not found, installing prerequisites..."
+                        ./install-prerequisites.sh
+                    else
+                        echo "Ansible is already installed: $(ansible --version | head -n 1)"
+                    fi
+                '''
+            }
+        }
+
+        stage('Verify Setup') {
             steps {
                 echo 'Verifying Ansible setup...'
                 sh '''
-                    chmod +x verify-setup.sh
-                    ./verify-setup.sh
+                    # Run verification (non-interactive)
+                    echo "n" | ./verify-setup.sh || {
+                        echo "Verification failed, attempting to fix..."
+                        ./install-prerequisites.sh
+                        echo "n" | ./verify-setup.sh
+                    }
                 '''
             }
         }

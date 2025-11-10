@@ -1,0 +1,8 @@
+# Don't copy these to Docker image
+.git
+.gitignore
+.claude
+*.swp
+*.swo
+*~
+.DS_Store

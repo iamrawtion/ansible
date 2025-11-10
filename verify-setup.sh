@@ -15,6 +15,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 ERRORS=0
+MISSING_PREREQUISITES=0
 
 # Check Ansible installation
 echo -n "Checking Ansible installation... "
@@ -26,6 +27,7 @@ else
     echo -e "${RED}✗${NC}"
     echo "  Ansible is not installed!"
     ERRORS=$((ERRORS + 1))
+    MISSING_PREREQUISITES=1
 fi
 
 # Check ansible-playbook
@@ -35,6 +37,7 @@ if command -v ansible-playbook &> /dev/null; then
 else
     echo -e "${RED}✗${NC}"
     ERRORS=$((ERRORS + 1))
+    MISSING_PREREQUISITES=1
 fi
 
 # Check Python
@@ -47,6 +50,7 @@ else
     echo -e "${RED}✗${NC}"
     echo "  Python 3 is not installed!"
     ERRORS=$((ERRORS + 1))
+    MISSING_PREREQUISITES=1
 fi
 
 echo ""
@@ -113,7 +117,45 @@ if [ $ERRORS -eq 0 ]; then
     exit 0
 else
     echo -e "${RED}Setup verification failed with $ERRORS error(s).${NC}"
-    echo "Please fix the issues above before running the training."
     echo ""
-    exit 1
+
+    # Offer to install prerequisites if they're missing
+    if [ $MISSING_PREREQUISITES -eq 1 ]; then
+        echo -e "${YELLOW}Missing prerequisites detected.${NC}"
+        echo ""
+        read -p "Would you like to automatically install missing prerequisites? (y/N): " -n 1 -r
+        echo ""
+
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if [ -f "./install-prerequisites.sh" ]; then
+                echo ""
+                echo "Running installation script..."
+                chmod +x ./install-prerequisites.sh
+                ./install-prerequisites.sh
+
+                # Re-run verification after installation
+                if [ $? -eq 0 ]; then
+                    echo ""
+                    echo "Re-running verification..."
+                    exec "$0"
+                else
+                    echo -e "${RED}Installation failed. Please check the errors above.${NC}"
+                    exit 1
+                fi
+            else
+                echo -e "${RED}Installation script not found!${NC}"
+                echo "Please run: ./install-prerequisites.sh manually"
+                exit 1
+            fi
+        else
+            echo "Please install missing prerequisites manually:"
+            echo "  ./install-prerequisites.sh"
+            echo ""
+            exit 1
+        fi
+    else
+        echo "Please fix the issues above before running the training."
+        echo ""
+        exit 1
+    fi
 fi

@@ -4,28 +4,68 @@ Welcome to the Ansible training course! This repository contains hands-on exampl
 
 ## Prerequisites
 
-Before starting, ensure you have:
-- Ansible installed (version 2.9 or higher recommended)
-- Python 3.x installed
-- Access to a Linux environment (the Jenkins Docker container)
+This training will work on any Linux environment. The setup scripts will automatically install:
+- Python 3.x
+- pip (Python package manager)
+- Ansible (version 2.9 or higher)
+- Required system dependencies
+
+**Supported Operating Systems:**
+- Ubuntu/Debian
+- CentOS/RHEL/Fedora
+- Alpine Linux
+- Other Linux distributions with Python 3
 
 ## Quick Start
 
-### 1. Verify Your Setup
+### Option 1: Automated Setup (Recommended for First-Time Users)
 
-First, verify that everything is properly configured:
+Run everything automatically - installs prerequisites, verifies setup, and runs training:
+
+```bash
+chmod +x setup-and-run.sh
+./setup-and-run.sh
+```
+
+This script will:
+1. Check if Ansible and Python are installed
+2. Automatically install missing prerequisites (with your confirmation)
+3. Verify the complete setup
+4. Give you options to run the training lessons
+
+### Option 2: Manual Step-by-Step Setup
+
+#### 1. Install Prerequisites (if needed)
+
+If Ansible is not installed, run:
+
+```bash
+chmod +x install-prerequisites.sh
+./install-prerequisites.sh
+```
+
+This will automatically detect your OS and install:
+- Python 3
+- pip
+- Ansible
+- Required system packages
+
+#### 2. Verify Your Setup
+
+Check that everything is properly configured:
 
 ```bash
 ./verify-setup.sh
 ```
 
-This script will check:
-- Ansible installation
-- Python installation
-- Required files
-- Connectivity to localhost
+This script will:
+- Check Ansible installation
+- Check Python installation
+- Verify required files
+- Test connectivity to localhost
+- **Offer to install missing prerequisites automatically**
 
-### 2. Run All Lessons
+#### 3. Run All Lessons
 
 To run all training lessons sequentially:
 
@@ -33,7 +73,7 @@ To run all training lessons sequentially:
 ./run-all-tests.sh
 ```
 
-### 3. Run Individual Lessons
+#### 4. Run Individual Lessons
 
 To run a specific lesson:
 
@@ -151,16 +191,20 @@ ansible/
 ├── templates/
 │   ├── app-config.j2             # Application configuration template
 │   └── index.html.j2             # HTML template example
-├── 01-basic-playbook.yml         # Lesson 1
-├── 02-file-operations.yml        # Lesson 2
-├── 03-variables-and-facts.yml    # Lesson 3
-├── 04-templates.yml              # Lesson 4
-├── 05-handlers.yml               # Lesson 5
-├── 06-comprehensive-example.yml  # Lesson 6
-├── run-all-tests.sh              # Script to run all lessons
-├── run-single-lesson.sh          # Script to run individual lessons
-├── verify-setup.sh               # Setup verification script
-└── README.md                     # This file
+├── 01-basic-playbook.yml         # Lesson 1: Basic Operations
+├── 02-file-operations.yml        # Lesson 2: File Management
+├── 03-variables-and-facts.yml    # Lesson 3: Variables
+├── 04-templates.yml              # Lesson 4: Templates
+├── 05-handlers.yml               # Lesson 5: Handlers
+├── 06-comprehensive-example.yml  # Lesson 6: Complete Example
+├── setup-and-run.sh              # One-command setup and execution
+├── install-prerequisites.sh      # Auto-install Ansible and dependencies
+├── verify-setup.sh               # Verify setup (offers auto-install)
+├── run-all-tests.sh              # Run all lessons
+├── run-single-lesson.sh          # Run individual lessons
+├── Jenkinsfile                   # Jenkins pipeline configuration
+├── README.md                     # This file (detailed guide)
+└── QUICK_REFERENCE.md            # Ansible command reference
 ```
 
 ## Common Ansible Commands
@@ -261,7 +305,13 @@ tree /tmp/training-app/  # or use: find /tmp/training-app/
 ## Troubleshooting
 
 ### Ansible Command Not Found
-Make sure Ansible is installed:
+
+**Easiest Solution:** Use the automated installation script:
+```bash
+./install-prerequisites.sh
+```
+
+**Manual Installation:**
 ```bash
 pip3 install ansible
 # or
@@ -269,22 +319,50 @@ apt-get install ansible  # on Debian/Ubuntu
 yum install ansible      # on RHEL/CentOS
 ```
 
+### Python Not Found
+
+The installation script will handle this automatically, or install manually:
+```bash
+# Ubuntu/Debian
+sudo apt-get update && sudo apt-get install -y python3 python3-pip
+
+# CentOS/RHEL
+sudo yum install -y python3 python3-pip
+
+# Alpine
+sudo apk add python3 py3-pip
+```
+
 ### Permission Denied
-If you get permission errors, you might need to:
-- Run with sudo (for system-level operations)
-- Check file permissions
-- Ensure you have write access to /tmp
+
+If you get permission errors:
+- Run with sudo for system-level operations (the install script will prompt when needed)
+- Check file permissions: `chmod +x *.sh`
+- Ensure you have write access to /tmp (all training playbooks use /tmp)
 
 ### Module Not Found
+
 Update Ansible to the latest version:
 ```bash
 pip3 install --upgrade ansible
+# or run the install script again
+./install-prerequisites.sh
 ```
 
 ### Playbook Fails
 - Check syntax: `ansible-playbook <file> --syntax-check`
 - Run in check mode first: `ansible-playbook <file> --check`
 - Use verbose output: `ansible-playbook <file> -vvv`
+
+### PATH Issues
+
+If Ansible is installed but not found, add to PATH:
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+```
+
+The installation script handles this automatically.
 
 ## Next Steps
 
@@ -303,31 +381,67 @@ After completing these lessons, you can:
 - [Ansible Best Practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)
 - [Jinja2 Template Documentation](https://jinja.palletsprojects.com/)
 
+## Running in Docker
+
+### Using Docker Compose (Easiest)
+
+```bash
+# Build and start the container
+docker-compose up -d
+
+# Access the container
+docker-compose exec ansible-training /bin/bash
+
+# Inside container, run the training
+./setup-and-run.sh
+```
+
+### Using Docker directly
+
+```bash
+# Build the image
+docker build -t ansible-training .
+
+# Run the container
+docker run -it ansible-training /bin/bash
+
+# Inside container, run the training
+./setup-and-run.sh
+```
+
 ## Running in Jenkins
 
-To run these training materials in a Jenkins pipeline, you can use this example Jenkinsfile:
+The included `Jenkinsfile` automatically:
+1. Checks if Ansible is installed
+2. Installs prerequisites if needed
+3. Verifies the setup
+4. Runs all 6 training lessons
+5. Displays results
+
+**To use in Jenkins:**
+
+1. Create a new Pipeline job
+2. Point it to this repository
+3. Jenkins will automatically use the included `Jenkinsfile`
+4. The pipeline will handle installation and setup automatically
+
+**Or use this simplified Jenkinsfile:**
 
 ```groovy
 pipeline {
-    agent {
-        docker {
-            image 'your-ansible-docker-image'
-        }
-    }
+    agent any
     stages {
-        stage('Verify Setup') {
+        stage('Complete Training') {
             steps {
-                sh './verify-setup.sh'
-            }
-        }
-        stage('Run Ansible Training') {
-            steps {
-                sh './run-all-tests.sh'
+                sh 'chmod +x setup-and-run.sh'
+                sh './setup-and-run.sh'
             }
         }
     }
 }
 ```
+
+The training will work in any Jenkins agent with basic Linux and sudo access.
 
 ## Questions or Issues?
 
