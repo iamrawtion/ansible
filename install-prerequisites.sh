@@ -50,14 +50,18 @@ detect_os() {
     echo -e "${BLUE}Detected OS: $OS $VERSION${NC}"
 }
 
-# Check if running as root
+# Check if running as root and sudo availability
 check_root() {
     if [ "$EUID" -eq 0 ]; then
         SUDO=""
         echo -e "${YELLOW}Running as root${NC}"
-    else
+    elif command -v sudo &> /dev/null; then
         SUDO="sudo"
         echo -e "${YELLOW}Will use sudo for system operations${NC}"
+    else
+        SUDO=""
+        echo -e "${YELLOW}Warning: sudo not found, attempting without sudo${NC}"
+        echo -e "${YELLOW}If you get permission errors, install sudo or run as root${NC}"
     fi
 }
 
@@ -98,29 +102,44 @@ install_python() {
 
     case $OS in
         ubuntu|debian)
-            $SUDO apt-get install -y python3 python3-pip
+            $SUDO apt-get install -y python3 python3-pip 2>/dev/null || {
+                echo -e "${YELLOW}Failed with apt-get, trying without package manager...${NC}"
+                echo -e "${RED}Python3 is required but cannot be installed automatically${NC}"
+                echo "Please install Python3 manually or run this script as root"
+                return 1
+            }
             ;;
         centos|rhel)
-            $SUDO yum install -y python3 python3-pip
+            $SUDO yum install -y python3 python3-pip 2>/dev/null || {
+                echo -e "${RED}Python3 is required but cannot be installed automatically${NC}"
+                return 1
+            }
             ;;
         fedora)
-            $SUDO dnf install -y python3 python3-pip
+            $SUDO dnf install -y python3 python3-pip 2>/dev/null || {
+                echo -e "${RED}Python3 is required but cannot be installed automatically${NC}"
+                return 1
+            }
             ;;
         alpine)
-            $SUDO apk add --no-cache python3 py3-pip
+            $SUDO apk add --no-cache python3 py3-pip 2>/dev/null || {
+                echo -e "${RED}Python3 is required but cannot be installed automatically${NC}"
+                return 1
+            }
             ;;
         *)
             echo -e "${RED}Unsupported OS for automatic installation${NC}"
             echo "Please install Python3 manually"
-            exit 1
+            return 1
             ;;
     esac
 
     if command -v python3 &> /dev/null; then
         echo -e "${GREEN}✓ Python3 installed successfully${NC}"
+        return 0
     else
         echo -e "${RED}✗ Failed to install Python3${NC}"
-        exit 1
+        return 1
     fi
 }
 
@@ -178,7 +197,10 @@ install_system_dependencies() {
                 libffi-dev \
                 git \
                 curl \
-                sshpass 2>/dev/null || echo "Some optional packages may have failed"
+                sshpass 2>/dev/null || {
+                echo -e "${YELLOW}Some system packages failed to install${NC}"
+                echo -e "${YELLOW}Will try to continue with pip-only installation${NC}"
+            }
             ;;
         centos|rhel)
             $SUDO yum install -y \
@@ -187,7 +209,9 @@ install_system_dependencies() {
                 libffi-devel \
                 git \
                 curl \
-                sshpass 2>/dev/null || echo "Some optional packages may have failed"
+                sshpass 2>/dev/null || {
+                echo -e "${YELLOW}Some system packages failed to install${NC}"
+            }
             ;;
         fedora)
             $SUDO dnf install -y \
@@ -196,7 +220,9 @@ install_system_dependencies() {
                 libffi-devel \
                 git \
                 curl \
-                sshpass 2>/dev/null || echo "Some optional packages may have failed"
+                sshpass 2>/dev/null || {
+                echo -e "${YELLOW}Some system packages failed to install${NC}"
+            }
             ;;
         alpine)
             $SUDO apk add --no-cache \
@@ -206,14 +232,16 @@ install_system_dependencies() {
                 openssl-dev \
                 git \
                 curl \
-                sshpass 2>/dev/null || echo "Some optional packages may have failed"
+                sshpass 2>/dev/null || {
+                echo -e "${YELLOW}Some system packages failed to install${NC}"
+            }
             ;;
         *)
             echo -e "${YELLOW}Skipping system dependencies for unknown OS${NC}"
             ;;
     esac
 
-    echo -e "${GREEN}✓ System dependencies installed${NC}"
+    echo -e "${GREEN}✓ System dependencies installation completed${NC}"
 }
 
 # Install Ansible

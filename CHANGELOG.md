@@ -2,6 +2,23 @@
 
 All notable changes to this Ansible training project will be documented in this file.
 
+## [1.2.1] - 2025-11-10
+
+### Fixed
+- Fixed "sudo: command not found" error in Jenkins Docker containers
+  - Script now detects when sudo is not available
+  - Attempts installation without sudo and provides clear warnings
+  - Better error handling for permission issues
+  - Graceful degradation when system packages can't be installed
+- Improved error messages and troubleshooting guidance
+
+### Added
+- JENKINS_SETUP.md - Comprehensive guide for Jenkins Docker setups
+  - Multiple scenarios (root, with sudo, without sudo)
+  - Dockerfile examples for Jenkins with Ansible
+  - Troubleshooting for common Jenkins issues
+  - Best practices for CI/CD pipelines
+
 ## [1.2.0] - 2025-11-10
 
 ### Added
